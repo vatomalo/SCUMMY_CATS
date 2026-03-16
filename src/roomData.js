@@ -12,13 +12,16 @@ export const GENERATED_TEXTURES = [
   { key: 'lab-layer-3-city', width: ROOM_WORLD_WIDTH, height: ROOM_HEIGHT },
   { key: 'lab-layer-4-roofs', width: ROOM_WORLD_WIDTH, height: ROOM_HEIGHT },
   { key: 'lab-layer-5-arches', width: ROOM_WORLD_WIDTH, height: ROOM_HEIGHT },
-  { key: 'lab-layer-6-floor', width: ROOM_WORLD_WIDTH, height: ROOM_HEIGHT },
   { key: 'lab-layer-7-foreground', width: ROOM_WORLD_WIDTH, height: ROOM_HEIGHT },
   { key: 'sprite-shelf', width: 210, height: 250 },
   { key: 'sprite-machine-off', width: 250, height: 220 },
   { key: 'sprite-machine-on', width: 250, height: 220 },
   { key: 'sprite-cat', width: 180, height: 170 },
   { key: 'sprite-fish', width: 86, height: 42 }
+];
+
+export const ROOM_IMAGE_ASSETS = [
+  { key: 'room-zero-background', path: 'RoomZero.png' }
 ];
 
 export const ROOMS = {
@@ -33,7 +36,16 @@ export const ROOMS = {
       { key: 'city', texture: 'lab-layer-3-city', depth: -50, scrollFactorX: 0.28, scrollFactorY: 1, originY: 0 },
       { key: 'roofs', texture: 'lab-layer-4-roofs', depth: -40, scrollFactorX: 0.38, scrollFactorY: 1, originY: 0 },
       { key: 'arches', texture: 'lab-layer-5-arches', depth: -30, scrollFactorX: 0.55, scrollFactorY: 1, originY: 0 },
-      { key: 'floor', texture: 'lab-layer-6-floor', depth: -20, scrollFactorX: 0.78, scrollFactorY: 1, originY: 0 },
+      {
+        key: 'main-background',
+        texture: 'room-zero-background',
+        depth: -20,
+        scrollFactorX: 0.78,
+        scrollFactorY: 1,
+        fit: 'cover',
+        width: ROOM_WORLD_WIDTH,
+        height: ROOM_HEIGHT
+      },
       { key: 'foreground', texture: 'lab-layer-7-foreground', depth: 60, scrollFactorX: 1.12, scrollFactorY: 1, originY: 0 }
     ],
     sprites: [

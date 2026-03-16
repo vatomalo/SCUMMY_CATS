@@ -3,6 +3,7 @@ import {
   GAME_WIDTH,
   GENERATED_TEXTURES,
   ROOM_HEIGHT,
+  ROOM_IMAGE_ASSETS,
   ROOMS,
   UI_HEIGHT,
   VERBS
@@ -62,6 +63,9 @@ class LabScene extends Phaser.Scene {
   preload() {
     this.load.audio('uiClick', 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
     this.load.audio('pickup', 'https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3');
+    ROOM_IMAGE_ASSETS.forEach((asset) => {
+      this.load.image(asset.key, asset.path);
+    });
   }
 
   create() {
@@ -225,10 +229,22 @@ class LabScene extends Phaser.Scene {
 
   buildRoomBackdrop() {
     this.room.layers.forEach((layer) => {
-      this.add.image(0, layer.originY ?? 0, layer.texture)
+      const image = this.add.image(0, layer.originY ?? 0, layer.texture)
         .setOrigin(0, 0)
         .setDepth(layer.depth)
         .setScrollFactor(layer.scrollFactorX, layer.scrollFactorY);
+
+      if (layer.fit === 'cover') {
+        const source = this.textures.get(layer.texture).getSourceImage();
+        const targetWidth = layer.width ?? this.room.worldWidth;
+        const targetHeight = layer.height ?? ROOM_HEIGHT;
+        const scale = Math.max(targetWidth / source.width, targetHeight / source.height);
+
+        image
+          .setOrigin(0.5, 0.5)
+          .setPosition(targetWidth / 2, targetHeight / 2)
+          .setScale(scale);
+      }
     });
 
     this.add.text(48, 36, this.room.title, {
