@@ -21,7 +21,14 @@ export const GENERATED_TEXTURES = [
 ];
 
 export const ROOM_IMAGE_ASSETS = [
-  { key: 'room-zero-background', path: 'RoomZero.png' }
+  { key: 'room-zero-background', path: 'RoomZero.png' },
+  { key: 'room-zero-items', path: 'RoomZeroItems.png' },
+  { key: 'sprite-cozy-cat-2', path: 'CozyCat2.png' },
+  { key: 'sprite-lazy-cat', path: 'LazyCat.png' },
+  { key: 'sprite-lazy-cat-2', path: 'LazyCat2.png' },
+  { key: 'sprite-stealthy-cat', path: 'StealthyCat.png' },
+  { key: 'sprite-uwu-cat', path: 'UWUCat.png' },
+  { key: 'sprite-human-sheet', path: 'Sprites.png' }
 ];
 
 export const ROOMS = {
@@ -31,32 +38,28 @@ export const ROOMS = {
     worldWidth: ROOM_WORLD_WIDTH,
     cameraPanPadding: 140,
     layers: [
-      { key: 'sky', texture: 'lab-layer-1-sky', depth: -70, scrollFactorX: 0.1, scrollFactorY: 1, originY: 0 },
-      { key: 'moon', texture: 'lab-layer-2-moon', depth: -60, scrollFactorX: 0.18, scrollFactorY: 1, originY: 0 },
-      { key: 'city', texture: 'lab-layer-3-city', depth: -50, scrollFactorX: 0.28, scrollFactorY: 1, originY: 0 },
-      { key: 'roofs', texture: 'lab-layer-4-roofs', depth: -40, scrollFactorX: 0.38, scrollFactorY: 1, originY: 0 },
-      { key: 'arches', texture: 'lab-layer-5-arches', depth: -30, scrollFactorX: 0.55, scrollFactorY: 1, originY: 0 },
       {
         key: 'main-background',
         texture: 'room-zero-background',
-        depth: -20,
-        scrollFactorX: 0.78,
+        depth: -10,
+        scrollFactorX: 0.72,
         scrollFactorY: 1,
         fit: 'cover',
         width: ROOM_WORLD_WIDTH,
         height: ROOM_HEIGHT
       },
-      { key: 'foreground', texture: 'lab-layer-7-foreground', depth: 60, scrollFactorX: 1.12, scrollFactorY: 1, originY: 0 }
+      {
+        key: 'background-overlay',
+        texture: 'room-zero-items',
+        depth: 40,
+        scrollFactorX: 0.9,
+        scrollFactorY: 1,
+        fit: 'cover',
+        width: ROOM_WORLD_WIDTH,
+        height: ROOM_HEIGHT
+      }
     ],
     sprites: [
-      {
-        key: 'shelf',
-        texture: 'sprite-shelf',
-        x: 210,
-        y: 250,
-        depth: 10,
-        origin: [0.5, 1]
-      },
       {
         key: 'machine',
         texture: 'sprite-machine-off',
@@ -68,11 +71,12 @@ export const ROOMS = {
       },
       {
         key: 'cat',
-        texture: 'sprite-cat',
+        texture: 'sprite-stealthy-cat',
         x: 1210,
-        y: 330,
+        y: 352,
         depth: 25,
         origin: [0.5, 1],
+        scale: 0.22,
         bob: { distance: 8, duration: 1.4 }
       },
       {
@@ -96,7 +100,6 @@ export const ROOMS = {
       },
       {
         key: 'shelf',
-        targetKey: 'shelf',
         x: 210,
         y: 170,
         width: 200,
@@ -112,6 +115,13 @@ export const ROOMS = {
         height: 220,
         label: 'Purr Machine'
       }
+    ],
+    spareSprites: [
+      { key: 'sprite-cozy-cat-2', label: 'Cozy Cat alt' },
+      { key: 'sprite-lazy-cat', label: 'Lazy Cat alt' },
+      { key: 'sprite-lazy-cat-2', label: 'Lazy Cat alt 2' },
+      { key: 'sprite-uwu-cat', label: 'UWU Cat alt' },
+      { key: 'sprite-human-sheet', label: 'Human sprite sheet' }
     ]
   }
 };
