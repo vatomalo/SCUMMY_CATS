@@ -16,6 +16,11 @@ A browser-first point-and-click adventure prototype inspired by SCUMM classics, 
 - Status line feedback
 - Inventory strip with item selection
 - Interactive room hotspots (cat NPC, shelf, machine)
+- A room-art framework with:
+  - 7 background layers per room
+  - per-layer parallax scroll factors
+  - sprite-based props/characters
+  - data-driven room layout in `src/roomData.js`
 - A simple puzzle flow:
   1. pick up fish from shelf
   2. use fish on machine
@@ -31,9 +36,18 @@ python -m http.server 4173
 
 Then open `http://localhost:4173`.
 
+## Using real sprite art
+
+The room is now defined in `src/roomData.js`.
+
+- Replace any generated texture key with your own loaded PNG using the same texture key.
+- Keep the room's `layers` array at 7 entries for the full parallax stack.
+- Tune each layer with `scrollFactorX` to control parallax depth.
+- Place props and characters in the `sprites` array and match hotspot rectangles to them.
+
 ## Next milestones
 
 1. Move to TypeScript + Vite build while preserving GitHub Pages deployment.
-2. Data-drive rooms/hotspots through JSON.
+2. Swap generated placeholder textures for real PNG sprite layers in `assets/`.
 3. Add room transitions and walkable zones.
 4. Add dialogue trees and save/load state.
