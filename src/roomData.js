@@ -146,7 +146,7 @@ export const ROOMS = {
         y: 332,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.36,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 0, trim: true }
       },
@@ -157,7 +157,7 @@ export const ROOMS = {
         y: 332,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.36,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 1, trim: true }
       },
@@ -168,7 +168,7 @@ export const ROOMS = {
         y: 334,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.38,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 2, trim: true }
       },
@@ -179,7 +179,7 @@ export const ROOMS = {
         y: 334,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.35,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 3, trim: true }
       },
@@ -190,7 +190,7 @@ export const ROOMS = {
         y: 334,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.35,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 4, trim: true }
       },
@@ -201,7 +201,7 @@ export const ROOMS = {
         y: 334,
         depth: 16,
         origin: [0.5, 1],
-        scale: 0.24,
+        scale: 0.35,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 24 },
         sheet: { columns: 3, rows: 2, index: 5, trim: true }
       },
