@@ -254,9 +254,14 @@ class LabScene extends Phaser.Scene {
 
   buildRoomSprites() {
     this.room.sprites.forEach((spriteData) => {
-      const textureKey = Number.isInteger(spriteData.stickerIndex)
-        ? this.getStickerTextureKey(spriteData.texture, spriteData.stickerIndex)
+      const baseTextureKey = spriteData.chromaKey
+        ? this.getChromaKeyTextureKey(spriteData.texture, spriteData.chromaKey)
         : spriteData.texture;
+      const textureKey = spriteData.frame
+        ? this.getFramedTextureKey(baseTextureKey, spriteData.frame)
+        : Number.isInteger(spriteData.stickerIndex)
+          ? this.getStickerTextureKey(baseTextureKey, spriteData.stickerIndex)
+          : baseTextureKey;
 
       const sprite = this.add.sprite(spriteData.x, spriteData.y, textureKey)
         .setOrigin(...spriteData.origin)
@@ -264,6 +269,10 @@ class LabScene extends Phaser.Scene {
 
       if (spriteData.scale) {
         sprite.setScale(spriteData.scale);
+      }
+
+      if (spriteData.visible === false) {
+        sprite.setVisible(false);
       }
 
       if (spriteData.bob) {
@@ -478,6 +487,72 @@ class LabScene extends Phaser.Scene {
 
     this.textures.addCanvas(stickerKey, stickerCanvas);
     return stickerKey;
+  }
+
+  getFramedTextureKey(textureKey, frame) {
+    const frameKey = `${textureKey}__frame_${frame.x}_${frame.y}_${frame.width}_${frame.height}`;
+    if (this.textures.exists(frameKey)) {
+      return frameKey;
+    }
+
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const frameCanvas = document.createElement('canvas');
+    frameCanvas.width = frame.width;
+    frameCanvas.height = frame.height;
+
+    frameCanvas
+      .getContext('2d')
+      .drawImage(
+        sourceImage,
+        frame.x,
+        frame.y,
+        frame.width,
+        frame.height,
+        0,
+        0,
+        frame.width,
+        frame.height
+      );
+
+    this.textures.addCanvas(frameKey, frameCanvas);
+    return frameKey;
+  }
+
+  getChromaKeyTextureKey(textureKey, chromaKey) {
+    const { r, g, b, tolerance = 0 } = chromaKey;
+    const chromaTextureKey = `${textureKey}__ck_${r}_${g}_${b}_${tolerance}`;
+    if (this.textures.exists(chromaTextureKey)) {
+      return chromaTextureKey;
+    }
+
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceImage.width;
+    canvas.height = sourceImage.height;
+
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.drawImage(sourceImage, 0, 0);
+
+    const image = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = image.data;
+
+    for (let index = 0; index < data.length; index += 4) {
+      const red = data[index];
+      const green = data[index + 1];
+      const blue = data[index + 2];
+
+      if (
+        Math.abs(red - r) <= tolerance &&
+        Math.abs(green - g) <= tolerance &&
+        Math.abs(blue - b) <= tolerance
+      ) {
+        data[index + 3] = 0;
+      }
+    }
+
+    context.putImageData(image, 0, 0);
+    this.textures.addCanvas(chromaTextureKey, canvas);
+    return chromaTextureKey;
   }
 
   getStickerBounds(textureKey) {

@@ -68,7 +68,8 @@ export const ROOMS = {
         x: 760,
         y: 278,
         depth: 18,
-        origin: [0.5, 1]
+        origin: [0.5, 1],
+        visible: false
       },
       {
         key: 'cat',
@@ -78,7 +79,8 @@ export const ROOMS = {
         depth: 25,
         origin: [0.5, 1],
         scale: 0.22,
-        stickerIndex: 0,
+        chromaKey: { r: 254, g: 254, b: 254, tolerance: 18 },
+        frame: { x: 0, y: 0, width: 1024, height: 1024 },
         bob: { distance: 8, duration: 1.4 }
       },
       {
@@ -87,7 +89,8 @@ export const ROOMS = {
         x: 214,
         y: 136,
         depth: 12,
-        origin: [0.5, 0.5]
+        origin: [0.5, 0.5],
+        visible: false
       }
     ],
     hotspots: [
