@@ -254,8 +254,8 @@ class LabScene extends Phaser.Scene {
 
   buildRoomSprites() {
     this.room.sprites.forEach((spriteData) => {
-      const textureKey = spriteData.trimAlpha
-        ? this.getTrimmedTextureKey(spriteData.texture)
+      const textureKey = Number.isInteger(spriteData.stickerIndex)
+        ? this.getStickerTextureKey(spriteData.texture, spriteData.stickerIndex)
         : spriteData.texture;
 
       const sprite = this.add.sprite(spriteData.x, spriteData.y, textureKey)
@@ -455,10 +455,38 @@ class LabScene extends Phaser.Scene {
     });
   }
 
-  getTrimmedTextureKey(textureKey) {
-    const trimmedKey = `${textureKey}__trimmed`;
-    if (this.textures.exists(trimmedKey)) {
-      return trimmedKey;
+  getStickerTextureKey(textureKey, stickerIndex = 0) {
+    const stickerKey = `${textureKey}__sticker_${stickerIndex}`;
+    if (this.textures.exists(stickerKey)) {
+      return stickerKey;
+    }
+
+    const stickerBounds = this.getStickerBounds(textureKey)[stickerIndex];
+    if (!stickerBounds) {
+      return textureKey;
+    }
+
+    const { minX, minY, width, height } = stickerBounds;
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const stickerCanvas = document.createElement('canvas');
+    stickerCanvas.width = width;
+    stickerCanvas.height = height;
+
+    stickerCanvas
+      .getContext('2d')
+      .drawImage(sourceImage, minX, minY, width, height, 0, 0, width, height);
+
+    this.textures.addCanvas(stickerKey, stickerCanvas);
+    return stickerKey;
+  }
+
+  getStickerBounds(textureKey) {
+    if (!this.stickerBoundsCache) {
+      this.stickerBoundsCache = new Map();
+    }
+
+    if (this.stickerBoundsCache.has(textureKey)) {
+      return this.stickerBoundsCache.get(textureKey);
     }
 
     const sourceImage = this.textures.get(textureKey).getSourceImage();
@@ -468,43 +496,88 @@ class LabScene extends Phaser.Scene {
 
     const context = canvas.getContext('2d', { willReadFrequently: true });
     context.drawImage(sourceImage, 0, 0);
-
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-    let minX = canvas.width;
-    let minY = canvas.height;
-    let maxX = -1;
-    let maxY = -1;
+    const width = canvas.width;
+    const height = canvas.height;
+    const visited = new Uint8Array(width * height);
+    const alphaThreshold = 10;
+    const minPixels = 120;
+    const bounds = [];
 
-    for (let y = 0; y < canvas.height; y += 1) {
-      for (let x = 0; x < canvas.width; x += 1) {
-        const alpha = imageData[(y * canvas.width + x) * 4 + 3];
-        if (alpha <= 10) {
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = y * width + x;
+        if (visited[index]) {
           continue;
         }
 
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
+        visited[index] = 1;
+        if (imageData[index * 4 + 3] <= alphaThreshold) {
+          continue;
+        }
+
+        const queue = [index];
+        let head = 0;
+        let pixels = 0;
+        let minX = x;
+        let minY = y;
+        let maxX = x;
+        let maxY = y;
+
+        while (head < queue.length) {
+          const current = queue[head];
+          head += 1;
+
+          const cx = current % width;
+          const cy = Math.floor(current / width);
+          pixels += 1;
+          minX = Math.min(minX, cx);
+          minY = Math.min(minY, cy);
+          maxX = Math.max(maxX, cx);
+          maxY = Math.max(maxY, cy);
+
+          for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+            for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+              if (offsetX === 0 && offsetY === 0) {
+                continue;
+              }
+
+              const nx = cx + offsetX;
+              const ny = cy + offsetY;
+              if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+                continue;
+              }
+
+              const neighbor = ny * width + nx;
+              if (visited[neighbor]) {
+                continue;
+              }
+
+              visited[neighbor] = 1;
+              if (imageData[neighbor * 4 + 3] > alphaThreshold) {
+                queue.push(neighbor);
+              }
+            }
+          }
+        }
+
+        if (pixels >= minPixels) {
+          bounds.push({
+            minX,
+            minY,
+            maxX,
+            maxY,
+            width: maxX - minX + 1,
+            height: maxY - minY + 1,
+            pixels
+          });
+        }
       }
     }
 
-    if (maxX < minX || maxY < minY) {
-      return textureKey;
-    }
-
-    const trimWidth = maxX - minX + 1;
-    const trimHeight = maxY - minY + 1;
-    const trimmedCanvas = document.createElement('canvas');
-    trimmedCanvas.width = trimWidth;
-    trimmedCanvas.height = trimHeight;
-
-    trimmedCanvas
-      .getContext('2d')
-      .drawImage(sourceImage, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
-
-    this.textures.addCanvas(trimmedKey, trimmedCanvas);
-    return trimmedKey;
+    bounds.sort((left, right) => right.pixels - left.pixels);
+    this.stickerBoundsCache.set(textureKey, bounds);
+    return bounds;
   }
 
   update() {

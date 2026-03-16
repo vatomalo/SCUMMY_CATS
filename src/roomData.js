@@ -78,7 +78,7 @@ export const ROOMS = {
         depth: 25,
         origin: [0.5, 1],
         scale: 0.22,
-        trimAlpha: true,
+        stickerIndex: 0,
         bob: { distance: 8, duration: 1.4 }
       },
       {
