@@ -257,7 +257,9 @@ class LabScene extends Phaser.Scene {
       const baseTextureKey = spriteData.chromaKey
         ? this.getChromaKeyTextureKey(spriteData.texture, spriteData.chromaKey)
         : spriteData.texture;
-      const textureKey = spriteData.frame
+      const textureKey = spriteData.sheet
+        ? this.getSheetCellTextureKey(baseTextureKey, spriteData.sheet)
+        : spriteData.frame
         ? this.getFramedTextureKey(baseTextureKey, spriteData.frame)
         : Number.isInteger(spriteData.stickerIndex)
           ? this.getStickerTextureKey(baseTextureKey, spriteData.stickerIndex)
@@ -489,8 +491,8 @@ class LabScene extends Phaser.Scene {
     return stickerKey;
   }
 
-  getFramedTextureKey(textureKey, frame) {
-    const frameKey = `${textureKey}__frame_${frame.x}_${frame.y}_${frame.width}_${frame.height}`;
+  getFramedTextureKey(textureKey, frame, explicitKey = null) {
+    const frameKey = explicitKey ?? `${textureKey}__frame_${frame.x}_${frame.y}_${frame.width}_${frame.height}`;
     if (this.textures.exists(frameKey)) {
       return frameKey;
     }
@@ -516,6 +518,91 @@ class LabScene extends Phaser.Scene {
 
     this.textures.addCanvas(frameKey, frameCanvas);
     return frameKey;
+  }
+
+  getSheetCellTextureKey(textureKey, sheet) {
+    const { columns, rows, index = 0, trim = false } = sheet;
+    const cellKey = `${textureKey}__sheet_${columns}x${rows}_${index}_${trim ? 'trim' : 'raw'}`;
+    if (this.textures.exists(cellKey)) {
+      return cellKey;
+    }
+
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const cellWidth = Math.floor(sourceImage.width / columns);
+    const cellHeight = Math.floor(sourceImage.height / rows);
+    const cellX = (index % columns) * cellWidth;
+    const cellY = Math.floor(index / columns) * cellHeight;
+
+    const rawCellKey = `${textureKey}__sheet_${columns}x${rows}_${index}_raw_source`;
+    const rawTextureKey = this.textures.exists(rawCellKey)
+      ? rawCellKey
+      : this.getFramedTextureKey(textureKey, {
+          x: cellX,
+          y: cellY,
+          width: cellWidth,
+          height: cellHeight
+        }, rawCellKey);
+
+    if (!trim) {
+      if (rawTextureKey !== cellKey && !this.textures.exists(cellKey)) {
+        const rawImage = this.textures.get(rawTextureKey).getSourceImage();
+        this.textures.addCanvas(cellKey, rawImage);
+      }
+      return cellKey;
+    }
+
+    return this.getTrimmedOpaqueTextureKey(rawTextureKey, cellKey);
+  }
+
+  getTrimmedOpaqueTextureKey(textureKey, targetKey = `${textureKey}__trimmed`) {
+    if (this.textures.exists(targetKey)) {
+      return targetKey;
+    }
+
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceImage.width;
+    canvas.height = sourceImage.height;
+
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.drawImage(sourceImage, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+    let minX = canvas.width;
+    let minY = canvas.height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < canvas.height; y += 1) {
+      for (let x = 0; x < canvas.width; x += 1) {
+        const alpha = imageData[(y * canvas.width + x) * 4 + 3];
+        if (alpha <= 10) {
+          continue;
+        }
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+
+    if (maxX < minX || maxY < minY) {
+      return textureKey;
+    }
+
+    const trimmedCanvas = document.createElement('canvas');
+    const trimmedWidth = maxX - minX + 1;
+    const trimmedHeight = maxY - minY + 1;
+    trimmedCanvas.width = trimmedWidth;
+    trimmedCanvas.height = trimmedHeight;
+
+    trimmedCanvas
+      .getContext('2d')
+      .drawImage(sourceImage, minX, minY, trimmedWidth, trimmedHeight, 0, 0, trimmedWidth, trimmedHeight);
+
+    this.textures.addCanvas(targetKey, trimmedCanvas);
+    return targetKey;
   }
 
   getChromaKeyTextureKey(textureKey, chromaKey) {

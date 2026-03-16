@@ -80,7 +80,7 @@ export const ROOMS = {
         origin: [0.5, 1],
         scale: 0.22,
         chromaKey: { r: 254, g: 254, b: 254, tolerance: 18 },
-        frame: { x: 0, y: 0, width: 1024, height: 1024 },
+        sheet: { columns: 3, rows: 3, index: 4, trim: true },
         bob: { distance: 8, duration: 1.4 }
       },
       {
