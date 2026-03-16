@@ -3,6 +3,7 @@ export const GAME_HEIGHT = 640;
 export const UI_HEIGHT = 170;
 export const ROOM_HEIGHT = GAME_HEIGHT - UI_HEIGHT;
 export const ROOM_WORLD_WIDTH = 1560;
+export const UI_DEPTH = 500;
 
 export const VERBS = ['Walk to', 'Look at', 'Pick up', 'Use', 'Talk to'];
 
@@ -44,7 +45,7 @@ export const ROOMS = {
         depth: -10,
         scrollFactorX: 0.72,
         scrollFactorY: 1,
-        fit: 'cover',
+        fit: 'stretch',
         width: ROOM_WORLD_WIDTH,
         height: ROOM_HEIGHT
       },
@@ -54,7 +55,7 @@ export const ROOMS = {
         depth: 40,
         scrollFactorX: 0.9,
         scrollFactorY: 1,
-        fit: 'cover',
+        fit: 'stretch',
         width: ROOM_WORLD_WIDTH,
         height: ROOM_HEIGHT
       }
@@ -77,6 +78,7 @@ export const ROOMS = {
         depth: 25,
         origin: [0.5, 1],
         scale: 0.22,
+        trimAlpha: true,
         bob: { distance: 8, duration: 1.4 }
       },
       {

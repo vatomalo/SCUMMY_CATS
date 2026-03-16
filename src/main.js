@@ -5,6 +5,7 @@ import {
   ROOM_HEIGHT,
   ROOM_IMAGE_ASSETS,
   ROOMS,
+  UI_DEPTH,
   UI_HEIGHT,
   VERBS
 } from './roomData.js';
@@ -234,16 +235,13 @@ class LabScene extends Phaser.Scene {
         .setDepth(layer.depth)
         .setScrollFactor(layer.scrollFactorX, layer.scrollFactorY);
 
-      if (layer.fit === 'cover') {
-        const source = this.textures.get(layer.texture).getSourceImage();
+      if (layer.fit === 'stretch') {
         const targetWidth = layer.width ?? this.room.worldWidth;
         const targetHeight = layer.height ?? ROOM_HEIGHT;
-        const scale = Math.max(targetWidth / source.width, targetHeight / source.height);
-
         image
-          .setOrigin(0.5, 0.5)
-          .setPosition(targetWidth / 2, targetHeight / 2)
-          .setScale(scale);
+          .setPosition(0, 0)
+          .setOrigin(0, 0)
+          .setDisplaySize(targetWidth, targetHeight);
       }
     });
 
@@ -256,7 +254,11 @@ class LabScene extends Phaser.Scene {
 
   buildRoomSprites() {
     this.room.sprites.forEach((spriteData) => {
-      const sprite = this.add.sprite(spriteData.x, spriteData.y, spriteData.texture)
+      const textureKey = spriteData.trimAlpha
+        ? this.getTrimmedTextureKey(spriteData.texture)
+        : spriteData.texture;
+
+      const sprite = this.add.sprite(spriteData.x, spriteData.y, textureKey)
         .setOrigin(...spriteData.origin)
         .setDepth(spriteData.depth);
 
@@ -361,13 +363,19 @@ class LabScene extends Phaser.Scene {
 
   buildUiPanel() {
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - UI_HEIGHT / 2, GAME_WIDTH, UI_HEIGHT, 0x19161c)
+      .setDepth(UI_DEPTH)
       .setScrollFactor(0);
     this.add.line(0, ROOM_HEIGHT, 0, 0, GAME_WIDTH, 0, 0xf0b35a)
       .setOrigin(0, 0)
+      .setDepth(UI_DEPTH + 1)
       .setScrollFactor(0);
 
-    this.add.text(20, ROOM_HEIGHT + 44, 'Verbs', { fontSize: '20px', color: '#f7d17b' }).setScrollFactor(0);
-    this.add.text(20, ROOM_HEIGHT + 108, 'Inventory', { fontSize: '20px', color: '#f7d17b' }).setScrollFactor(0);
+    this.add.text(20, ROOM_HEIGHT + 44, 'Verbs', { fontSize: '20px', color: '#f7d17b' })
+      .setDepth(UI_DEPTH + 1)
+      .setScrollFactor(0);
+    this.add.text(20, ROOM_HEIGHT + 108, 'Inventory', { fontSize: '20px', color: '#f7d17b' })
+      .setDepth(UI_DEPTH + 1)
+      .setScrollFactor(0);
 
     VERBS.forEach((verb, index) => {
       const button = this.makeUiButton(130 + index * 150, ROOM_HEIGHT + 48, 138, 38, verb, () => {
@@ -382,12 +390,15 @@ class LabScene extends Phaser.Scene {
   makeUiButton(x, y, width, height, label, onClick) {
     const bg = this.add.rectangle(x, y, width, height, 0x382f3f)
       .setStrokeStyle(2, 0x8a7ba1)
+      .setDepth(UI_DEPTH + 2)
       .setScrollFactor(0);
     const text = this.add.text(x, y, label, {
       fontSize: '16px',
       color: '#f8eede',
       align: 'center'
-    }).setOrigin(0.5).setScrollFactor(0);
+    }).setOrigin(0.5)
+      .setDepth(UI_DEPTH + 3)
+      .setScrollFactor(0);
 
     bg.setInteractive({ useHandCursor: true });
     bg.on('pointerdown', onClick);
@@ -442,6 +453,58 @@ class LabScene extends Phaser.Scene {
       const normalized = Phaser.Math.Clamp((pointer.x - cameraPanPadding) / (GAME_WIDTH - cameraPanPadding * 2), 0, 1);
       this.pointerTargetX = Phaser.Math.Linear(minX, maxX, normalized);
     });
+  }
+
+  getTrimmedTextureKey(textureKey) {
+    const trimmedKey = `${textureKey}__trimmed`;
+    if (this.textures.exists(trimmedKey)) {
+      return trimmedKey;
+    }
+
+    const sourceImage = this.textures.get(textureKey).getSourceImage();
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceImage.width;
+    canvas.height = sourceImage.height;
+
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.drawImage(sourceImage, 0, 0);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let minX = canvas.width;
+    let minY = canvas.height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < canvas.height; y += 1) {
+      for (let x = 0; x < canvas.width; x += 1) {
+        const alpha = imageData[(y * canvas.width + x) * 4 + 3];
+        if (alpha <= 10) {
+          continue;
+        }
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+
+    if (maxX < minX || maxY < minY) {
+      return textureKey;
+    }
+
+    const trimWidth = maxX - minX + 1;
+    const trimHeight = maxY - minY + 1;
+    const trimmedCanvas = document.createElement('canvas');
+    trimmedCanvas.width = trimWidth;
+    trimmedCanvas.height = trimHeight;
+
+    trimmedCanvas
+      .getContext('2d')
+      .drawImage(sourceImage, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
+
+    this.textures.addCanvas(trimmedKey, trimmedCanvas);
+    return trimmedKey;
   }
 
   update() {
